@@ -1,0 +1,29 @@
+{
+  "name": "startup-visualization",
+  "authors": [
+    "budi <bryanaa@connect.ust.hk>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "static/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "^4.1.0",
+    "jquery": "^3.3.1",
+    "d3": "3.4.11",
+    "d3-cloud": "^1.2.5"
+  },
+  "resolutions": {
+    "bootstrap": "^4.1.0",
+    "jquery": "^3.3.1"
+  }
+}
