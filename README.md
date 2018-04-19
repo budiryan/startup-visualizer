@@ -14,6 +14,9 @@ By team Naive Baes
 2. Install `bower` using `npm`: `npm install -g bower`
 3. Install the frontend dependencies: `bower install --save`
 
+## Database
+1. Database? too lazy, YOLO csv
+
 ## Get the main startup csv
 1. Create a new folder called `data/`, place it in root project folder
 2. Get the latest startup csv file and rename it to `startup.csv`
