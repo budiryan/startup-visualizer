@@ -13,8 +13,8 @@ function createWordCloud(countryChoice) {
     function draw(categories) {
         d3.select("svg").remove();
         d3.select("#word-cloud").append("svg")
-                .attr("width", 1000)
-                .attr("height", 1000)
+                .attr("width", 1600)
+                .attr("height", 900)
                 .attr("class", "wordcloud")
                 .append("g")
                 // without the transform, words words would get cutoff to the left and top, they would
@@ -35,7 +35,7 @@ function createWordCloud(countryChoice) {
     d3.json("/word_cloud?country=" + countryChoice, function (error, categories) {
         console.log(categories);
         d3.layout.cloud()
-        .size([1000, 1000])
+        .size([1600, 900])
         .words(categories)
         .rotate(0)
         .fontSize(function(d) { return d.frequency; })
