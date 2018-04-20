@@ -1,14 +1,18 @@
-$(document).ready(function(){
-    createWordCloud();
-});
+document.getElementById('sub_form').onsubmit = function(){
+  console.log(document.getElementById('dropdown').value);
+  let countryChoice = document.getElementById('dropdown').value;
+  createWordCloud(countryChoice);
+  return false;
+};
 
-function createWordCloud() {
-    var color = d3.scale.linear()
+function createWordCloud(countryChoice) {
+    let color = d3.scale.linear()
             .domain([0,1,2,3,4,5,6,10,15,20,100])
             .range(["#ddd", "#ccc", "#bbb", "#aaa", "#999", "#888", "#777", "#666", "#555", "#444", "#333", "#222"]);
 
     function draw(categories) {
-        d3.select("body").append("svg")
+        d3.select("svg").remove();
+        d3.select("#word-cloud").append("svg")
                 .attr("width", 1000)
                 .attr("height", 1000)
                 .attr("class", "wordcloud")
@@ -28,8 +32,8 @@ function createWordCloud() {
     }
 
     // request the data
-    d3.json("/word_cloud", function (error, categories) {
-        console.log(categories)
+    d3.json("/word_cloud?country=" + countryChoice, function (error, categories) {
+        console.log(categories);
         d3.layout.cloud()
         .size([1000, 1000])
         .words(categories)
@@ -38,6 +42,8 @@ function createWordCloud() {
         .on("end", draw)
         .start();
     });
+
+    return false;
 }
 
 

@@ -8,9 +8,35 @@
 
   </head>
   <body>
-    <h1>HELLO WORLD</h1>
     <div class="container">
-      <div id="chart"></div>
+        <div class="row">
+            <h1>Word Cloud</h1>
+        </div>
+
+        <form role="form" id="sub_form">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <select id="dropdown" name="dropdown" class="form-control custom-dropdown">
+                                <option>USA</option>
+                                <option>CHN</option>
+                                <option>IDN</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-4">
+                    <button type="submit" class="btn btn-large custom-button">Submit</button>
+                    </div>
+                </div>
+        </form>
+
+        <div class="row">
+            <div id="word-cloud">
+            </div>
+        </div>
     </div>
 
     <script src={{ url_for('static', filename='./bower_components/jquery/dist/jquery.min.js') }}></script>
