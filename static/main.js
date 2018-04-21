@@ -30,7 +30,13 @@ function createWordCloud(countryChoice) {
                 })
                 .text(function(d) { return d.text; })
                 .on("click", function (d, i){
-                  alert(d.text);
+                  let category = d.text;
+                  console.log("submitted request for: " + category);
+                  let requestString = '/most_popular_companies?country='
+                      + countryChoice + '&category=' + category;
+                  d3.json(requestString, function(error, result) {
+                     console.log(result);
+                  });
               });
     }
 
