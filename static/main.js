@@ -5,6 +5,12 @@ document.getElementById('sub_form').onsubmit = function(){
   return false;
 };
 
+
+function createParCoords(countryChoice){
+    console.log("country choice for parcoords: " + countryChoice);
+}
+
+
 function createWordCloud(countryChoice) {
     let color = d3.scale.linear()
             .domain([0,1,2,3,4,5,6,10,15,20,100])
@@ -13,8 +19,8 @@ function createWordCloud(countryChoice) {
     function draw(categories) {
         d3.select("svg").remove();
         d3.select("#word-cloud").append("svg")
-                .attr("width", 1600)
-                .attr("height", 900)
+                .attr("width", 900)
+                .attr("height", 600)
                 .attr("class", "wordcloud")
                 .append("g")
                 // without the transform, words words would get cutoff to the left and top, they would
@@ -42,9 +48,9 @@ function createWordCloud(countryChoice) {
 
     // request the data
     d3.json("/word_cloud?country=" + countryChoice, function (error, categories) {
-        console.log(categories);
+        // console.log(categories);
         d3.layout.cloud()
-        .size([1600, 900])
+        .size([900, 600])
         .words(categories)
         .rotate(0)
         .fontSize(function(d) { return d.frequency; })

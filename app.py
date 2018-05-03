@@ -29,6 +29,10 @@ def get_most_popular_companies_by_category():
 @app.route("/")
 def index():
     return render_template("index.html")
+	
+@app.route("/parallel_coords")
+def parallel_coords():
+    return render_template("parcoords_display.html")
 
 
 if __name__ == '__main__':

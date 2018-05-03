@@ -1,21 +1,22 @@
-d3.csv("data_join_filtered.csv", function(data){
+d3.csv("startups.csv", function(data){
+  console.log('data is: ' + data);
   //filter data by country
-  var filtered_country = data.filter(function(d) {
+  let filtered_country = data.filter(function(d) {
     if (d.country_code == 'CHN') {
       return d;
   }
   });
   //keep only the important columns
-  var filtered_data = filtered_country.map(function(d) {
+  let filtered_data = filtered_country.map(function(d) {
     return {
       investment_type: d.investment_type,
-      amount_invested: +d.raised_amount_usd,
+      amount_invested: + d.raised_amount_usd,
       investor_type: d.investor_type,
       foreign_vs_local: (d.country_code == d.investor_country_code)?"local":"foreign"
     }
   });
   //dimensions of each axis
-  var dimensions = {"investment_type": {
+  let dimensions = {"investment_type": {
                   title: 'investment type',
                   type: 'string',
                   index: 0
@@ -39,13 +40,13 @@ d3.csv("data_join_filtered.csv", function(data){
                 index: 3
               }};
 
-   var colourIndex = d3.scale.linear()
+   let colourIndex = d3.scale.linear()
     .domain([0, 11])
     .range(['#FDC33E', '#A6C9B1'])
     .interpolate(d3.interpolateLab);
-   var it = 0;
-   var color = function(d){console.log(it); return colourIndex((it++)%12)};
-   var parcoords = d3.parcoords()(".parcoords")
+   let it = 0;
+   let color = function(d){console.log(it); return colourIndex((it++)%12)};
+   let parcoords = d3.parcoords()(".parcoords")
      .data(filtered_data)
      .color(color)
      .dimensions(dimensions)

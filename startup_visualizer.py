@@ -17,6 +17,8 @@ def get_word_cloud_data(country_code):
     # Make the distribution of the frequency to be the same
     multiplier = 300
     category['frequency'] = (category['frequency'] / float(category['frequency'].sum())) * multiplier
+    # Clip to prevent word cloud which has extra large size
+    category['frequency'] = category['frequency'].clip(0, 35)
 
     return category.to_json(orient='records')
 

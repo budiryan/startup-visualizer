@@ -3,6 +3,7 @@
   <head>
     <title>Startup Visualizer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href={{ url_for('static', filename='./bower_components/d3.parcoords/d3.parcoords.css') }} rel="stylesheet" media="screen">
     <link href={{ url_for('static', filename='./bower_components/bootstrap/dist/css/bootstrap.min.css') }} rel="stylesheet" media="screen">
     <link href={{ url_for('static', filename='style.css') }} rel="stylesheet" media="screen">
 
@@ -10,10 +11,17 @@
   <body>
     <div class="container">
         <div class="row">
-            <h1>Word Cloud</h1>
+            <div class="col-md-12">
+                <h1>Word Cloud + ParCoords</h1>
+            </div>
         </div>
 
         <form role="form" id="sub_form">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <h4>Choose country:</h4>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-sm-4">
                         <div class="form-group">
@@ -35,13 +43,24 @@
         <br>
         <br>
         <div class="row">
-            <div id="word-cloud">
+            <div class="col-sm-12">
+                <div id="word-cloud">
+                </div>
+            </div>
+        </div>
+        <br>
+        <br>
+        <div class="row">
+            <div class="col-sm-12">
+                <div id="parcoords" style="width:800px; height: 300px;">
+                </div>
             </div>
         </div>
     </div>
 
     <script src={{ url_for('static', filename='./bower_components/jquery/dist/jquery.min.js') }}></script>
     <script src={{ url_for('static', filename='./bower_components/d3/d3.min.js') }}></script>
+    <script src={{ url_for('static', filename='./bower_components/d3.parcoords/d3.parcoords.js') }}></script>
     <script src={{ url_for('static', filename='./bower_components/d3-cloud/build/d3.layout.cloud.js') }}></script>
     <script src={{ url_for('static', filename='main.js') }}></script>
   </body>
