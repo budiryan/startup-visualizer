@@ -8,6 +8,7 @@ By team Naive Baes
 3. Install `pip` <a href="https://pip.pypa.io/en/stable/installing/">here</a>
 4. Install `pipenv`: `pip install pipenv` or `pip3 install pipenv` if you have both python2 and python3 installed on your system
 5. Enter the virtual environment: `pipenv shell`
+6. Install backend dependencies: `pipenv install`
 
 ## Frontend
 1. Install `npm` <a href="https://www.npmjs.com/get-npm">here</a>
