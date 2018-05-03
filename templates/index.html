@@ -3,7 +3,7 @@
   <head>
     <title>Startup Visualizer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href={{ url_for('static', filename='./bower_components/d3.parcoords/d3.parcoords.css') }} rel="stylesheet" media="screen">
+    <link href={{ url_for('static', filename='./lib/d3.parcoords.css') }} rel="stylesheet" media="screen">
     <link href={{ url_for('static', filename='./bower_components/bootstrap/dist/css/bootstrap.min.css') }} rel="stylesheet" media="screen">
     <link href={{ url_for('static', filename='style.css') }} rel="stylesheet" media="screen">
 
@@ -52,7 +52,7 @@
         <br>
         <div class="row">
             <div class="col-sm-12">
-                <div id="parcoords" style="width:800px; height: 300px;">
+                <div id="example" class="parcoords" style="width:800px; height: 300px;">
                 </div>
             </div>
         </div>
@@ -60,7 +60,7 @@
 
     <script src={{ url_for('static', filename='./bower_components/jquery/dist/jquery.min.js') }}></script>
     <script src={{ url_for('static', filename='./bower_components/d3/d3.min.js') }}></script>
-    <script src={{ url_for('static', filename='./bower_components/d3.parcoords/d3.parcoords.js') }}></script>
+    <script src={{ url_for('static', filename='./lib/d3.parcoords.js') }}></script>
     <script src={{ url_for('static', filename='./bower_components/d3-cloud/build/d3.layout.cloud.js') }}></script>
     <script src={{ url_for('static', filename='main.js') }}></script>
   </body>

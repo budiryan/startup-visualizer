@@ -1,6 +1,12 @@
 import pandas as pd
 
 
+def get_data(country_code):
+    df = pd.read_csv('data/startups.csv')
+    df = df[df['country_code'] == country_code]
+    return df.to_json(orient='records')
+
+
 def get_word_cloud_data(country_code):
     df = pd.read_csv('data/startups.csv')
     df = df[df['country_code'] == country_code]
@@ -15,7 +21,7 @@ def get_word_cloud_data(country_code):
     category = category.rename(columns={'index': 'text', 0: 'frequency'})
 
     # Make the distribution of the frequency to be the same
-    multiplier = 300
+    multiplier = 420
     category['frequency'] = (category['frequency'] / float(category['frequency'].sum())) * multiplier
     # Clip to prevent word cloud which has extra large size
     category['frequency'] = category['frequency'].clip(0, 35)
