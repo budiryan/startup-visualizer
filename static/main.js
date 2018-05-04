@@ -1,10 +1,84 @@
+//Append the svg element
+let height = 550;
+let width = 1000;
+let overlayWidth = 100;
+let overlayHeight = 55;
+let circleAmount = 1;   //Million
+let pathTime = 10000;   //Time to transit between locations
+let maxCircleRadius = 15;     //circle for net amounts
+let positiveColor = "blue";
+let negativeColor = "red";
+let codeMap = d3.map();
+let nameMap = d3.map();
+
+let svg = d3.select("#map").append("svg")
+            .attr("height",height)
+            .attr("width",width);
+
+
+$(document).ready(function() {
+    console.log( "ready!" );
+    initMap();
+});
+
+
 document.getElementById('sub_form').onsubmit = function(){
-  console.log(document.getElementById('dropdown').value);
   let countryChoice = document.getElementById('dropdown').value;
   createWordCloud(countryChoice);
   createParCoords(countryChoice);
   return false;
 };
+
+
+function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
+    if(error){
+        console.log(error);
+        throw error;
+    }
+
+    codeMap.set(countrycode.code, countrycode.alpha3);
+    nameMap.set(countrycode.alpha3, countrycode.code);
+
+    //Map projection
+    let projection = d3.geo.mercator().translate([500,350]);
+
+    //Create projected geopath
+    let geoPath = d3.geo.path().projection(projection);
+
+    //Map
+    let world = topojson.feature(worldmap, {
+    type: "GeometryCollection",
+    geometries: worldmap.objects.countries.geometries
+    });
+    //Map
+    map = svg.append("g").selectAll("path")
+        .data(world.features)
+        .enter()
+        .append("path")
+        .attr("class", "countries")
+        .attr("d",geoPath)
+        .attr("id", function(d){return codeMap.get(d.id)});
+
+    //Map, to create the borders, notice only borders between countries are drawn
+    svg.append("g").append("path")
+        .attr("class", "borders")
+        .attr("d",geoPath(topojson.mesh(worldmap, worldmap.objects.countries, function(a, b) { return a !== b; })));
+
+}
+
+function initMap(){
+    d3.queue()
+      .defer(d3.json, "/worldmap")
+      .defer(d3.json , "/countrycode")
+      .defer(d3.json , "/demoflow") // TODO: Replace this with a request to server
+      .defer(d3.json , "/demototal") // TODO: Replace this with a request to server
+      .await(drawMap);
+
+    d3.queue().defer(d3.json , "/countrycode",function(d){
+           codeMap.set(d.code  , d.alpha3);
+           nameMap.set(d.alpha3, d.name  );
+    });
+}
 
 
 function createParCoords(countryChoice){

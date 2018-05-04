@@ -12,7 +12,7 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12">
-                <h1>Word Cloud + ParCoords</h1>
+                <h1>Startup Visualizer</h1>
             </div>
         </div>
 
@@ -40,28 +40,52 @@
                     </div>
                 </div>
         </form>
+
         <br>
         <br>
+
+        {#Start map#}
+        <div class="row">
+            <div class="col=sm-12">
+                <div id="map">
+
+                </div>
+            </div>
+        </div>
+        {#End map#}
+
+        <br>
+        <br>
+
+        {#Start word cloud#}
         <div class="row">
             <div class="col-sm-12">
                 <div id="word-cloud">
                 </div>
             </div>
         </div>
+        {#End word cloud#}
+
         <br>
         <br>
+
+        {#Start parcoords#}
         <div class="row">
             <div class="col-sm-12">
                 <div id="example" class="parcoords" style="width:800px; height: 300px;">
                 </div>
             </div>
         </div>
+        {#End parcoords#}
+
     </div>
 
     <script src={{ url_for('static', filename='./bower_components/jquery/dist/jquery.min.js') }}></script>
     <script src={{ url_for('static', filename='./bower_components/d3/d3.min.js') }}></script>
     <script src={{ url_for('static', filename='./lib/d3.parcoords.js') }}></script>
     <script src={{ url_for('static', filename='./bower_components/d3-cloud/build/d3.layout.cloud.js') }}></script>
+    <script src={{ url_for('static', filename='./bower_components/d3-queue/d3-queue.js') }}></script>
+    <script src={{ url_for('static', filename='./bower_components/topojson/topojson.js') }}></script>
     <script src={{ url_for('static', filename='main.js') }}></script>
   </body>
 </html>
