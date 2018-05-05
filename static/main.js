@@ -174,23 +174,23 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
       });
 }
 
-function mouseover(d){overlay.style("display", null);}
-
-function mouseout(d){overlay.style("display", "none");}
-
-function mousemove(d){
-  overlay.select("rect")
-      .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
-      .attr("y",d3.mouse(this)[1]-1.25*overlayHeight);
-  overlay.select("#country")
-      .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
-      .attr("y",d3.mouse(this)[1]-1.5*overlayHeight)
-      .text(nameMap.get(d.country))
-  overlay.select("#data")
-      .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
-      .attr("y",d3.mouse(this)[1]-0.5*overlayHeight)
-      .text(d.net);
-}
+// function mouseover(d){overlay.style("display", null);}
+//
+// function mouseout(d){overlay.style("display", "none");}
+//
+// function mousemove(d){
+//   overlay.select("rect")
+//       .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+//       .attr("y",d3.mouse(this)[1]-1.25*overlayHeight);
+//   overlay.select("#country")
+//       .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+//       .attr("y",d3.mouse(this)[1]-1.5*overlayHeight)
+//       .text(nameMap.get(d.country))
+//   overlay.select("#data")
+//       .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+//       .attr("y",d3.mouse(this)[1]-0.5*overlayHeight)
+//       .text(d.net);
+// }
 
 
 function createParCoords(countryChoice){
