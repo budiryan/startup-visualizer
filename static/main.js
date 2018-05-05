@@ -15,9 +15,11 @@ let svg = d3.select("#map").append("svg")
             .attr("height",height)
             .attr("width",width);
 
+let selectedCountry = null;
+
 
 $(document).ready(function() {
-    console.log( "ready!" );
+    console.log( "Ready function is called!" );
     initMap();
 });
 
@@ -30,14 +32,37 @@ document.getElementById('sub_form').onsubmit = function(){
 };
 
 
+function initMap(){
+    d3.queue()
+        .defer(d3.json, "/countrycode")
+        .await(mapCountryCode);
+}
+
+
+function mapCountryCode(error, countryCode){
+    // codeMap.set(countryCode.code  , countryCode.alpha3);
+    // nameMap.set(countryCode.alpha3, countryCode.name  );
+    for(let i = 0; i < countryCode.length; i++)
+        codeMap.set(countryCode[i].code, countryCode[i].alpha3);
+
+    for(let i = 0; i < countryCode.length; i++)
+        nameMap.set(countryCode[i].alpha3, countryCode[i].name);
+
+    d3.queue()
+      .defer(d3.json, "/worldmap")
+      .defer(d3.json , "/countrycode")
+      .defer(d3.json , "/demoflow") // TODO: Replace this with a request to server
+      .defer(d3.json , "/demototal") // TODO: Replace this with a request to server
+      .await(drawMap)
+}
+
+
 function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
+    console.log("DRAWMAP IS CALLED!");
     if(error){
         console.log(error);
         throw error;
     }
-
-    codeMap.set(countrycode.code, countrycode.alpha3);
-    nameMap.set(countrycode.alpha3, countrycode.code);
 
     //Map projection
     let projection = d3.geo.mercator().translate([500,350]);
@@ -45,11 +70,22 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
     //Create projected geopath
     let geoPath = d3.geo.path().projection(projection);
 
+    //Convert net foreign investment into circle radius
+    let amountRadiusScale = d3.scale.sqrt()
+      .domain([0,d3.max(totalbycountry,function(d){return Math.abs(d.net);})])
+      .range([0,maxCircleRadius]);
+    //Convert net foreign investment into [0,1] , currently not used
+
+    let amountColorScale = d3.scale.linear()
+      .domain([-amountRadiusScale.range()[1],amountRadiusScale.range()[1]])
+      .range([0,1]);
+
     //Map
     let world = topojson.feature(worldmap, {
-    type: "GeometryCollection",
-    geometries: worldmap.objects.countries.geometries
+        type: "GeometryCollection",
+        geometries: worldmap.objects.countries.geometries
     });
+
     //Map
     map = svg.append("g").selectAll("path")
         .data(world.features)
@@ -57,27 +93,103 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
         .append("path")
         .attr("class", "countries")
         .attr("d",geoPath)
-        .attr("id", function(d){return codeMap.get(d.id)});
+        .attr("id", function(d){return codeMap.get(+d.id)});
 
     //Map, to create the borders, notice only borders between countries are drawn
     svg.append("g").append("path")
         .attr("class", "borders")
         .attr("d",geoPath(topojson.mesh(worldmap, worldmap.objects.countries, function(a, b) { return a !== b; })));
 
+     //Create group for each line of circles based on the dealflow dataset
+    deals = svg.append("g").attr("class","transit-circles").selectAll("g")
+                .data(dealflow)
+                .enter()
+                .append("g")
+                .attr("class",function(d){return d.origin + " " + d.destination;});
+
+    //Create line of circles for each group, ideally integrated into the enter state
+    deals.each(function(d){
+        let originCentroid;
+        let destinationCentroid;
+        let origin = d3.select("#" + d.origin);
+        let destination = d3.select("#" + d.destination);
+        origin.each(function(d){originCentroid = geoPath.centroid(d);});
+        destination.each(function(d){destinationCentroid = geoPath.centroid(d);});
+        //Rather complicated way of drawing the line of circles and distribute them evenly
+        for(i = 0 ; i < +d.amount/circleAmount ; i++){
+          let circle = d3.select(this).append("circle");
+          //
+          circle
+            .attr("r","1.5")
+            .attr("fill","rgba(0,0,0,1)")
+          circle
+            .attr("cx", function(d){return originCentroid[0]+i*(destinationCentroid[0]-originCentroid[0])/d.amount;})
+            .attr("cy", function(d){return originCentroid[1]+i*(destinationCentroid[1]-originCentroid[1])/d.amount;})
+            .transition()
+            .ease("linear")
+            .duration((+d.amount-i)*pathTime/d.amount)
+            .attr('cx', destinationCentroid[0])
+            .attr('cy', destinationCentroid[1])
+            // .on("end",function repeat(){
+            //   d3.active(this)
+            //   .transition()
+            //   .duration(0)
+            //   .attr('cx', originCentroid[0])
+            //   .attr('cy', originCentroid[1])
+            //   .transition()
+            //   .duration(pathTime)
+            //   .attr('cx', destinationCentroid[0])
+            //   .attr('cy', destinationCentroid[1])
+            //   .on("end", repeat);
+            // });
+        }
+    });
+      //Create net investment circle for each country based on the totalbycountry dataset passed in
+      //i.e. big circles
+      countrytotal = svg.append("g").attr("class","country-circles").selectAll("circle")
+        .data(totalbycountry)
+        .enter()
+        .append("circle")
+        .attr("class",function(d){return d.country});
+
+        //Configure each net investment circle
+      //Note there are click, mouseover, mouseout and mousemove events built in
+      countrytotal.each(function(d){
+        let centroid;
+        let origin = d3.select("#" + d.country);
+        origin.each(function(d){centroid = geoPath.centroid(d);})
+        d3.select(this)
+            .attr("cx",centroid[0])
+            .attr("cy",centroid[1])
+            .attr("r",function(d){return amountRadiusScale(Math.abs(d.net));})
+            .attr("fill", function(d){if(d.net>=0){return positiveColor} else{return negativeColor}})
+            .on("click", function(d){
+                createWordCloud(d.country);
+                createParCoords(d.country);
+                console.log(selectedCountry);
+            })
+            .on("mouseover",mouseover)
+            .on("mouseout",mouseout)
+            .on("mousemove",mousemove);
+      });
 }
 
-function initMap(){
-    d3.queue()
-      .defer(d3.json, "/worldmap")
-      .defer(d3.json , "/countrycode")
-      .defer(d3.json , "/demoflow") // TODO: Replace this with a request to server
-      .defer(d3.json , "/demototal") // TODO: Replace this with a request to server
-      .await(drawMap);
+function mouseover(d){overlay.style("display", null);}
 
-    d3.queue().defer(d3.json , "/countrycode",function(d){
-           codeMap.set(d.code  , d.alpha3);
-           nameMap.set(d.alpha3, d.name  );
-    });
+function mouseout(d){overlay.style("display", "none");}
+
+function mousemove(d){
+  overlay.select("rect")
+      .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+      .attr("y",d3.mouse(this)[1]-1.25*overlayHeight);
+  overlay.select("#country")
+      .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+      .attr("y",d3.mouse(this)[1]-1.5*overlayHeight)
+      .text(nameMap.get(d.country))
+  overlay.select("#data")
+      .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+      .attr("y",d3.mouse(this)[1]-0.5*overlayHeight)
+      .text(d.net);
 }
 
 

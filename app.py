@@ -37,7 +37,6 @@ def worldmap():
     with open('data/worldmap.json') as json_data:
         d = json.load(json_data)
         d = json.dumps(d)
-        print(d)
     return d
 
 
