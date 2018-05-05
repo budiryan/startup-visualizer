@@ -58,7 +58,7 @@ function mapCountryCode(error, countryCode){
 
 
 function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
-    console.log("DRAWMAP IS CALLED!");
+    console.log("Begin drawing map..");
     if(error){
         console.log(error);
         throw error;
@@ -157,45 +157,84 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
       countrytotal.each(function(d){
         let centroid;
         let origin = d3.select("#" + d.country);
-        origin.each(function(d){centroid = geoPath.centroid(d);})
+        origin.each(function(d){centroid = geoPath.centroid(d);});
         d3.select(this)
             .attr("cx",centroid[0])
             .attr("cy",centroid[1])
             .attr("r",function(d){return amountRadiusScale(Math.abs(d.net));})
             .attr("fill", function(d){if(d.net>=0){return positiveColor} else{return negativeColor}})
             .on("click", function(d){
+                // Clicking the country will display the world cloud and parallel coordinate
                 createWordCloud(d.country);
                 createParCoords(d.country);
-                console.log(selectedCountry);
             })
-            .on("mouseover",mouseover)
-            .on("mouseout",mouseout)
-            .on("mousemove",mousemove);
+            // .on("mouseover",mouseover)
+            // .on("mouseout",mouseout)
+            // .on("mousemove",mousemove);
       });
 }
 
-// function mouseover(d){overlay.style("display", null);}
-//
-// function mouseout(d){overlay.style("display", "none");}
-//
-// function mousemove(d){
-//   overlay.select("rect")
-//       .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
-//       .attr("y",d3.mouse(this)[1]-1.25*overlayHeight);
-//   overlay.select("#country")
-//       .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
-//       .attr("y",d3.mouse(this)[1]-1.5*overlayHeight)
-//       .text(nameMap.get(d.country))
-//   overlay.select("#data")
-//       .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
-//       .attr("y",d3.mouse(this)[1]-0.5*overlayHeight)
-//       .text(d.net);
-// }
+
+function createWordCloud(countryChoice) {
+    let color = d3.scale.linear()
+            .domain([0,1,2,3,4,5,6,10,15,20,100])
+            .range(["#ddd", "#ccc", "#bbb", "#aaa", "#999", "#888", "#777", "#666", "#555", "#444", "#333", "#222"]);
+
+    function draw(categories) {
+        console.log("Begin drawing wordcloud");
+
+        // Remove previous wordcloud if there is any
+        d3.select(".wordcloud").remove();
+
+        d3.select("#wordcloud-container").append("svg")
+                .attr("width", 900)
+                .attr("height", 300)
+                .attr("class", "wordcloud")
+                .append("g")
+                // without the transform, words words would get cutoff to the left and top, they would
+                // appear outside of the SVG area
+                .attr("transform", "translate(300,150)")
+                .selectAll("text")
+                .data(categories)
+                .enter().append("text")
+                .style("font-size", function(d) { return d.size + "px"; })
+                .style("fill", function(d, i) { return color(i); })
+                .attr("transform", function(d) {
+                    return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                })
+                .text(function(d) { return d.text; })
+                .on("click", function (d, i){
+                  let category = d.text;
+                  console.log("submitted request for: " + category);
+                  let requestString = '/most_popular_companies?country='
+                      + countryChoice + '&category=' + category;
+                  d3.json(requestString, function(error, result) {
+                     console.log(result);
+                  });
+              });
+    }
+
+    // request the data
+    d3.json("/word_cloud?country=" + countryChoice, function (error, categories) {
+        d3.layout.cloud()
+        .size([900, 300])
+        .words(categories)
+        .rotate(0)
+        .fontSize(function(d) { return d.frequency; })
+        .on("end", draw)
+        .start();
+    });
+    return false;
+}
 
 
 function createParCoords(countryChoice){
-    console.log("country choice for parcoords: " + countryChoice);
-    d3.select("svg").remove();
+    // First, remove the previous parallel coordinate if there is any
+    $(".parcoords").empty();
+
+    console.log("Begin parallel coordinates..");
+
+    // Parallel Coordinate creation begins
     let requestString = "/par_coords?country=" + countryChoice;
     d3.json(requestString, function(data) {
               //keep only the important columns
@@ -254,58 +293,6 @@ function createParCoords(countryChoice){
                parcoords.svg.selectAll("text")
                .style("font", "10px sans-serif");
             });
-}
-
-
-function createWordCloud(countryChoice) {
-    let color = d3.scale.linear()
-            .domain([0,1,2,3,4,5,6,10,15,20,100])
-            .range(["#ddd", "#ccc", "#bbb", "#aaa", "#999", "#888", "#777", "#666", "#555", "#444", "#333", "#222"]);
-
-    function draw(categories) {
-        d3.select("svg").remove();
-        d3.select("canvas").remove();
-        d3.select("#word-cloud").append("svg")
-                .attr("width", 800)
-                .attr("height", 300)
-                .attr("class", "wordcloud")
-                .append("g")
-                // without the transform, words words would get cutoff to the left and top, they would
-                // appear outside of the SVG area
-                .attr("transform", "translate(300,150)")
-                .selectAll("text")
-                .data(categories)
-                .enter().append("text")
-                .style("font-size", function(d) { return d.size + "px"; })
-                .style("fill", function(d, i) { return color(i); })
-                .attr("transform", function(d) {
-                    return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
-                })
-                .text(function(d) { return d.text; })
-                .on("click", function (d, i){
-                  let category = d.text;
-                  console.log("submitted request for: " + category);
-                  let requestString = '/most_popular_companies?country='
-                      + countryChoice + '&category=' + category;
-                  d3.json(requestString, function(error, result) {
-                     console.log(result);
-                  });
-              });
-    }
-
-    // request the data
-    d3.json("/word_cloud?country=" + countryChoice, function (error, categories) {
-        // console.log(categories);
-        d3.layout.cloud()
-        .size([800, 300])
-        .words(categories)
-        .rotate(0)
-        .fontSize(function(d) { return d.frequency; })
-        .on("end", draw)
-        .start();
-    });
-
-    return false;
 }
 
 
