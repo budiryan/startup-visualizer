@@ -58,6 +58,18 @@ def demototal():
     return df.to_json(orient='records')
 
 
+@app.route('/getflow')
+def getflow():
+    # Get investment flow from every country pairs from the dataset
+    return startup_visualizer.getflow()
+
+
+@app.route('/gettotal')
+def gettotal():
+    # Get total net investment for every country, can be negative
+    return startup_visualizer.gettotal()
+
+
 @app.route('/')
 def index():
     return render_template("index.html")
