@@ -5,7 +5,7 @@ let height = 550;
 let width = 1000;
 let overlayWidth = 100;
 let overlayHeight = 55;
-let circleAmount = 1;   //Million
+let circleAmount = 5;   //Million
 let pathTime = 10000;   //Time to transit between locations
 let maxCircleRadius = 15;     //circle for net amounts
 let positiveColor = "blue";
@@ -124,37 +124,38 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
             destinationCentroid = geoPath.centroid(d);
         });
         //Rather complicated way of drawing the line of circles and distribute them evenly
-        for(i = 0 ; i < +d.amount / circleAmount ; i++){
+        var numCircle = Math.ceil(+d.amount/circleAmount);
+        console.log(numCircle);
+        for(i = 0 ; i < numCircle ; i++){
             if((typeof destinationCentroid !== "undefined") && (typeof originCentroid !== "undefined")) {
                 let circle = d3.select(this).append("circle");
-                //`
+
                 circle
                   .attr("r", "1.5")
                   .attr("fill", "rgba(0,0,0,1)")
                 circle
                   .attr("cx", function (d) {
-                      return originCentroid[0] + i * (destinationCentroid[0] - originCentroid[0]) / d.amount;
+                      return originCentroid[0] + i * (destinationCentroid[0] - originCentroid[0]) / numCircle;
                   })
                   .attr("cy", function (d) {
-                      return originCentroid[1] + i * (destinationCentroid[1] - originCentroid[1]) / d.amount;
+                      return originCentroid[1] + i * (destinationCentroid[1] - originCentroid[1]) / numCircle;
                   })
                   .transition()
                   .ease("linear")
-                  .duration((+d.amount - i) * pathTime / d.amount)
+                  .duration((numCircle - i) * pathTime / numCircle)
                   .attr('cx', destinationCentroid[0])
                   .attr('cy', destinationCentroid[1])
-                // .on("end",function repeat(){
-                //   d3.active(this)
-                //   .transition()
-                //   .duration(0)
-                //   .attr('cx', originCentroid[0])
-                //   .attr('cy', originCentroid[1])
-                //   .transition()
-                //   .duration(pathTime)
-                //   .attr('cx', destinationCentroid[0])
-                //   .attr('cy', destinationCentroid[1])
-                //   .on("end", repeat);
-                // });
+                  .each("end",function repeat(){
+                      d3.select(this)
+                      .attr('cx', originCentroid[0])
+                      .attr('cy', originCentroid[1])
+                      .transition()
+                      .ease("linear")
+                      .duration(pathTime)
+                      .attr('cx', destinationCentroid[0])
+                      .attr('cy', destinationCentroid[1])
+                      .each("end", repeat);
+                    });
             }
         }
     });
@@ -269,7 +270,6 @@ function createWordCloud(countryChoice) {
     });
     return false;
 }
-
 
 function createParCoords(countryChoice){
     // First, remove the previous parallel coordinate if there is any
