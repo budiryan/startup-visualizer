@@ -54,7 +54,6 @@ def get_most_popular_companies(country_code, category):
 
     final = final.rename(columns={0: 'category'})
     final = final[final['category'] == category]
-    print('Most popular companies in this category is: ', list(final.sort_values('count', ascending=False)[:3]['company_name']))
     return final.sort_values('count', ascending=False)[:3].to_json(orient='records')
 
 

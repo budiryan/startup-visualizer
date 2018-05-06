@@ -1,4 +1,6 @@
 //Append the svg element
+
+// Map's constant definitions
 let height = 550;
 let width = 1000;
 let overlayWidth = 100;
@@ -14,22 +16,13 @@ let nameMap = d3.map();
 let svg = d3.select("#map").append("svg")
             .attr("height",height)
             .attr("width",width);
-
 let selectedCountry = null;
 
 
 $(document).ready(function() {
-    console.log( "Ready function is called!" );
+    console.log( "Start Application" );
     initMap();
 });
-
-
-document.getElementById('sub_form').onsubmit = function(){
-  let countryChoice = document.getElementById('dropdown').value;
-  createWordCloud(countryChoice);
-  createParCoords(countryChoice);
-  return false;
-};
 
 
 function initMap(){
@@ -40,8 +33,6 @@ function initMap(){
 
 
 function mapCountryCode(error, countryCode){
-    // codeMap.set(countryCode.code  , countryCode.alpha3);
-    // nameMap.set(countryCode.alpha3, countryCode.name  );
     for(let i = 0; i < countryCode.length; i++)
         codeMap.set(countryCode[i].code, countryCode[i].alpha3);
 
@@ -51,8 +42,8 @@ function mapCountryCode(error, countryCode){
     d3.queue()
       .defer(d3.json, "/worldmap")
       .defer(d3.json , "/countrycode")
-      .defer(d3.json , "/demoflow") // TODO: Replace this with a request to server
-      .defer(d3.json , "/demototal") // TODO: Replace this with a request to server
+      .defer(d3.json , "/getflow")
+      .defer(d3.json , "/gettotal")
       .await(drawMap)
 }
 
@@ -113,35 +104,45 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
         let destinationCentroid;
         let origin = d3.select("#" + d.origin);
         let destination = d3.select("#" + d.destination);
-        origin.each(function(d){originCentroid = geoPath.centroid(d);});
-        destination.each(function(d){destinationCentroid = geoPath.centroid(d);});
+        origin.each(function(d){
+            originCentroid = geoPath.centroid(d);
+        });
+        destination.each(function(d){
+            destinationCentroid = geoPath.centroid(d);
+        });
         //Rather complicated way of drawing the line of circles and distribute them evenly
-        for(i = 0 ; i < +d.amount/circleAmount ; i++){
-          let circle = d3.select(this).append("circle");
-          //
-          circle
-            .attr("r","1.5")
-            .attr("fill","rgba(0,0,0,1)")
-          circle
-            .attr("cx", function(d){return originCentroid[0]+i*(destinationCentroid[0]-originCentroid[0])/d.amount;})
-            .attr("cy", function(d){return originCentroid[1]+i*(destinationCentroid[1]-originCentroid[1])/d.amount;})
-            .transition()
-            .ease("linear")
-            .duration((+d.amount-i)*pathTime/d.amount)
-            .attr('cx', destinationCentroid[0])
-            .attr('cy', destinationCentroid[1])
-            // .on("end",function repeat(){
-            //   d3.active(this)
-            //   .transition()
-            //   .duration(0)
-            //   .attr('cx', originCentroid[0])
-            //   .attr('cy', originCentroid[1])
-            //   .transition()
-            //   .duration(pathTime)
-            //   .attr('cx', destinationCentroid[0])
-            //   .attr('cy', destinationCentroid[1])
-            //   .on("end", repeat);
-            // });
+        for(i = 0 ; i < +d.amount / circleAmount ; i++){
+            if((typeof destinationCentroid !== "undefined") && (typeof originCentroid !== "undefined")) {
+                let circle = d3.select(this).append("circle");
+                //`
+                circle
+                  .attr("r", "1.5")
+                  .attr("fill", "rgba(0,0,0,1)")
+                circle
+                  .attr("cx", function (d) {
+                      return originCentroid[0] + i * (destinationCentroid[0] - originCentroid[0]) / d.amount;
+                  })
+                  .attr("cy", function (d) {
+                      return originCentroid[1] + i * (destinationCentroid[1] - originCentroid[1]) / d.amount;
+                  })
+                  .transition()
+                  .ease("linear")
+                  .duration((+d.amount - i) * pathTime / d.amount)
+                  .attr('cx', destinationCentroid[0])
+                  .attr('cy', destinationCentroid[1])
+                // .on("end",function repeat(){
+                //   d3.active(this)
+                //   .transition()
+                //   .duration(0)
+                //   .attr('cx', originCentroid[0])
+                //   .attr('cy', originCentroid[1])
+                //   .transition()
+                //   .duration(pathTime)
+                //   .attr('cx', destinationCentroid[0])
+                //   .attr('cy', destinationCentroid[1])
+                //   .on("end", repeat);
+                // });
+            }
         }
     });
       //Create net investment circle for each country based on the totalbycountry dataset passed in
@@ -167,6 +168,9 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
                 // Clicking the country will display the world cloud and parallel coordinate
                 createWordCloud(d.country);
                 createParCoords(d.country);
+                let selectedCountry = nameMap.get(d.country);
+                let displayString = "Startup Information of: " + selectedCountry;
+                $(".country-info").text(displayString);
             })
             // .on("mouseover",mouseover)
             // .on("mouseout",mouseout)
@@ -209,7 +213,16 @@ function createWordCloud(countryChoice) {
                   let requestString = '/most_popular_companies?country='
                       + countryChoice + '&category=' + category;
                   d3.json(requestString, function(error, result) {
-                     console.log(result);
+                    // Display the top 3 companies of the given category
+                    // TODO: Create an overlay for this
+                    let company_1 = result[0].company_name;
+                    let company_2 = result[1].company_name;
+                    let company_3 = result[2].company_name;
+                    let displayString = "Most popular companies for this category are: " + company_1 + ", "
+                        + company_2
+                        + " and "
+                        + company_3;
+                    alert(displayString);
                   });
               });
     }
