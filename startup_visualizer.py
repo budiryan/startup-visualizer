@@ -40,7 +40,7 @@ def get_most_popular_companies(country_code, category):
     startups = pd.read_csv('data/startups.csv')
     startups = startups[startups['country_code'] == country_code]
     startups = startups.set_index('company_uuid')
-    startups = startups[['company_name', 'category_group_list']]
+    startups = startups[['company_name', 'category_group_list', 'homepage_url']]
     count = startups.groupby([startups.index]).size().rename(columns={0: 'count'})
     categories = pd.DataFrame(startups.drop_duplicates().category_group_list.str.split(',', expand=True).stack())
 

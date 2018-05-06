@@ -21,6 +21,19 @@ let selectedCountry = null;
 
 $(document).ready(function() {
     console.log( "Start Application" );
+    $( ".company-dialog" ).dialog({
+      autoOpen: false,
+      show: {
+        effect: "blind",
+        duration: 500
+      },
+      hide: {
+        effect: "explode",
+        duration: 500
+      }
+    });
+
+    // Initialize startup map
     initMap();
 });
 
@@ -159,22 +172,33 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
         let centroid;
         let origin = d3.select("#" + d.country);
         origin.each(function(d){centroid = geoPath.centroid(d);});
-        d3.select(this)
-            .attr("cx",centroid[0])
-            .attr("cy",centroid[1])
-            .attr("r",function(d){return amountRadiusScale(Math.abs(d.net));})
-            .attr("fill", function(d){if(d.net>=0){return positiveColor} else{return negativeColor}})
-            .on("click", function(d){
-                // Clicking the country will display the world cloud and parallel coordinate
-                createWordCloud(d.country);
-                createParCoords(d.country);
-                let selectedCountry = nameMap.get(d.country);
-                let displayString = "Startup Information of: " + selectedCountry;
-                $(".country-info").text(displayString);
-            })
+        if(typeof centroid !== "undefined") {
+            d3.select(this)
+                .attr("cx", centroid[0])
+                .attr("cy", centroid[1])
+                .attr("r", function (d) {
+                    return amountRadiusScale(Math.abs(d.net));
+                })
+                .attr("fill", function (d) {
+                    if (d.net >= 0) {
+                        return positiveColor
+                    } else {
+                        return negativeColor
+                    }
+                })
+                .on("click", function (d) {
+                    // Clicking the country will display the world cloud and parallel coordinate
+                    $( ".company-dialog" ).dialog( "close" );
+                    createWordCloud(d.country);
+                    createParCoords(d.country);
+                    let selectedCountry = nameMap.get(d.country);
+                    let displayString = "Startup Information of: " + selectedCountry;
+                    $(".country-info").text(displayString);
+                });
             // .on("mouseover",mouseover)
             // .on("mouseout",mouseout)
             // .on("mousemove",mousemove);
+        }
       });
 }
 
@@ -208,21 +232,27 @@ function createWordCloud(countryChoice) {
                 })
                 .text(function(d) { return d.text; })
                 .on("click", function (d, i){
+                  $( ".company-dialog" ).dialog( "close" );
                   let category = d.text;
-                  console.log("submitted request for: " + category);
                   let requestString = '/most_popular_companies?country='
                       + countryChoice + '&category=' + category;
                   d3.json(requestString, function(error, result) {
                     // Display the top 3 companies of the given category
-                    // TODO: Create an overlay for this
-                    let company_1 = result[0].company_name;
-                    let company_2 = result[1].company_name;
-                    let company_3 = result[2].company_name;
-                    let displayString = "Most popular companies for this category are: " + company_1 + ", "
-                        + company_2
-                        + " and "
-                        + company_3;
-                    alert(displayString);
+                    $(".company-dialog-text").text("Most popular company in this category: ");
+                    let company_list = $(".company-dialog-text").append('<ul></ul>').find('ul');
+
+                    for (i in result) {
+                        let company_link = $('<a />');
+                        company_link.attr('href', result[i].homepage_url);
+                        company_link.attr('target', '_blank');
+                        company_link.text(result[i].company_name);
+
+                        inside_list = company_list.append('<li></li>').find('li').last();
+                        inside_list.append(company_link);
+                        company_list.append(inside_list);
+                    }
+
+                    $( ".company-dialog" ).dialog( "open" );
                   });
               });
     }
@@ -307,6 +337,3 @@ function createParCoords(countryChoice){
                .style("font", "10px sans-serif");
             });
 }
-
-
-
