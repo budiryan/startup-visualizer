@@ -135,11 +135,8 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
         var randPos = Math.random();
         for(i = 0 ; i < numCircle ; i++){
             if((typeof destinationCentroid !== "undefined") && (typeof originCentroid !== "undefined")) {
-                let circle = d3.select(this).append("circle");
+                let circle = d3.select(this).append("circle").attr("class","transit");
 
-                circle
-                  .attr("r", "1.5")
-                  .attr("fill", "rgba(0,0,0,1)")
                 circle
                   .attr("cx", function (d) {
                       return originCentroid[0] + (i+randPos) * (destinationCentroid[0] - originCentroid[0]) / numCircle;
@@ -174,8 +171,7 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
       countrytotal = svg.append("g").attr("class","country-circles").selectAll("circle")
         .data(totalbycountry)
         .enter()
-        .append("circle")
-        .attr("class",function(d){return d.country});
+        .append("circle");
 
         //Configure each net investment circle
       //Note there are click, mouseover, mouseout and mousemove events built in
@@ -190,12 +186,13 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
                 .attr("r", function (d) {
                     return amountRadiusScale(Math.abs(d.net));
                 })
-                .attr("fill", function (d) {
-                    if (d.net >= 0) {
-                        return positiveColor
-                    } else {
-                        return negativeColor
-                    }
+                .attr("class",function(d){
+                  if(d.net>=0){
+                    return d.country + " out";
+                  }
+                  else{
+                    return d.country + " in";
+                  }
                 })
                 .on("click", click);
 
@@ -219,34 +216,33 @@ function click(d){
 
   //Filtering
   d3.selectAll(".transit-circles g circle").each(function(d){
-    d3.select(this).attr("opacity",1);
+    d3.select(this).style("display","inline");
   });
   //If the same country circle is clicked a second time (tracked by the "country" variable), return to top view
   if(country != d.country){
     country = d.country;
     d3.selectAll(".transit-circles g:not(." + country + ") circle").each(function(d){
-      d3.select(this).attr("opacity",0);
+      d3.select(this).style("display","none");
     });
     //Select all country circles and set to 0 opacity
     d3.selectAll(".country-circles circle:not(." + country + ")").each(function(d){
-      var obj = d3.select(this)
-        .attr("opacity",0);
+      var obj = d3.select(this).style("display","none");
     });
     //Select all rellavant countries and set to 1 opacity
     d3.selectAll(".transit-circles g." + country).each(function(d){
       //Super crude method... please help think how to improve this, maybe a more advanced not selection?
       var otherCountry = ".country-circles circle."+d3.select(this).attr("class").replace(country,"").replace(" ","");
       d3.selectAll(otherCountry).each(function(d){
-        var obj = d3.select(this).attr("opacity",1);
+        var obj = d3.select(this).style("display","inline");
       });
     });
     d3.selectAll(".country-circles circle." + country).each(function(d){
-      d3.select(this).attr("opacity",1);
+      d3.select(this).style("display","inline");
     });
   }
   else{
     d3.selectAll(".country-circles circle").each(function(d){
-      d3.select(this).attr("opacity",1);
+      d3.select(this).style("display","inline");
     });
     country = "svg"
   }
@@ -255,10 +251,10 @@ function click(d){
 function clickbackground(d){
   //When users click the empty background created earlier, view reverts to the original
   d3.selectAll(".transit-circles g circle").each(function(d){
-    d3.select(this).attr("opacity",1);
+    d3.select(this).style("display","inline");
   });
   d3.selectAll(".country-circles circle").each(function(d){
-    d3.select(this).attr("opacity",1);
+    d3.select(this).style("display","inline");
   });
   country = "svg"
 }
