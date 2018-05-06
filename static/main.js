@@ -104,6 +104,13 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
         .attr("class", "borders")
         .attr("d",geoPath(topojson.mesh(worldmap, worldmap.objects.countries, function(a, b) { return a !== b; })));
 
+    //A  background for people to click on and cancels any filtering
+    svg.append("g").append("rect")
+        .attr("height",height)
+        .attr("width",width)
+        .attr("opacity","0")
+        .on("click",clickbackground);
+
      //Create group for each line of circles based on the dealflow dataset
     deals = svg.append("g").attr("class","transit-circles").selectAll("g")
                 .data(dealflow)
@@ -125,7 +132,7 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
         });
         //Rather complicated way of drawing the line of circles and distribute them evenly
         var numCircle = Math.ceil(+d.amount/circleAmount);
-        console.log(numCircle);
+        var randPos = Math.random();
         for(i = 0 ; i < numCircle ; i++){
             if((typeof destinationCentroid !== "undefined") && (typeof originCentroid !== "undefined")) {
                 let circle = d3.select(this).append("circle");
@@ -135,27 +142,30 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
                   .attr("fill", "rgba(0,0,0,1)")
                 circle
                   .attr("cx", function (d) {
-                      return originCentroid[0] + i * (destinationCentroid[0] - originCentroid[0]) / numCircle;
+                      return originCentroid[0] + (i+randPos) * (destinationCentroid[0] - originCentroid[0]) / numCircle;
                   })
                   .attr("cy", function (d) {
-                      return originCentroid[1] + i * (destinationCentroid[1] - originCentroid[1]) / numCircle;
+                      return originCentroid[1] + (i+randPos) * (destinationCentroid[1] - originCentroid[1]) / numCircle;
                   })
                   .transition()
                   .ease("linear")
-                  .duration((numCircle - i) * pathTime / numCircle)
+                  .duration((numCircle - (i-randPos)) * pathTime / numCircle)
                   .attr('cx', destinationCentroid[0])
                   .attr('cy', destinationCentroid[1])
-                  .each("end",function repeat(){
-                      d3.select(this)
-                      .attr('cx', originCentroid[0])
-                      .attr('cy', originCentroid[1])
-                      .transition()
-                      .ease("linear")
-                      .duration(pathTime)
-                      .attr('cx', destinationCentroid[0])
-                      .attr('cy', destinationCentroid[1])
-                      .each("end", repeat);
-                    });
+                  .each("end",repeat);
+
+                  function repeat(){
+                    d3.select(this)
+                    .attr('cx', originCentroid[0])
+                    .attr('cy', originCentroid[1])
+                    .transition()
+                    .ease("linear")
+                    .duration(pathTime)
+                    .attr('cx', destinationCentroid[0])
+                    .attr('cy', destinationCentroid[1])
+                    .each("end", repeat);
+                  }
+
             }
         }
     });
@@ -187,22 +197,71 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
                         return negativeColor
                     }
                 })
-                .on("click", function (d) {
-                    // Clicking the country will display the world cloud and parallel coordinate
-                    $( ".company-dialog" ).dialog( "close" );
-                    createWordCloud(d.country);
-                    createParCoords(d.country);
-                    let selectedCountry = nameMap.get(d.country);
-                    let displayString = "Startup Information of: " + selectedCountry;
-                    $(".country-info").text(displayString);
-                });
+                .on("click", click);
+
             // .on("mouseover",mouseover)
             // .on("mouseout",mouseout)
             // .on("mousemove",mousemove);
-        }
+        };
       });
 }
 
+let country = "svg";
+
+function click(d){
+  // Clicking the country will display the world cloud and parallel coordinate
+  $( ".company-dialog" ).dialog( "close" );
+  createWordCloud(d.country);
+  createParCoords(d.country);
+  let selectedCountry = nameMap.get(d.country);
+  let displayString = "Startup Information of: " + selectedCountry;
+  $(".country-info").text(displayString);
+
+  //Filtering
+  d3.selectAll(".transit-circles g circle").each(function(d){
+    d3.select(this).attr("opacity",1);
+  });
+  //If the same country circle is clicked a second time (tracked by the "country" variable), return to top view
+  if(country != d.country){
+    country = d.country;
+    d3.selectAll(".transit-circles g:not(." + country + ") circle").each(function(d){
+      d3.select(this).attr("opacity",0);
+    });
+    //Select all country circles and set to 0 opacity
+    d3.selectAll(".country-circles circle:not(." + country + ")").each(function(d){
+      var obj = d3.select(this)
+        .attr("opacity",0);
+    });
+    //Select all rellavant countries and set to 1 opacity
+    d3.selectAll(".transit-circles g." + country).each(function(d){
+      //Super crude method... please help think how to improve this, maybe a more advanced not selection?
+      var otherCountry = ".country-circles circle."+d3.select(this).attr("class").replace(country,"").replace(" ","");
+      d3.selectAll(otherCountry).each(function(d){
+        var obj = d3.select(this).attr("opacity",1);
+      });
+    });
+    d3.selectAll(".country-circles circle." + country).each(function(d){
+      d3.select(this).attr("opacity",1);
+    });
+  }
+  else{
+    d3.selectAll(".country-circles circle").each(function(d){
+      d3.select(this).attr("opacity",1);
+    });
+    country = "svg"
+  }
+}
+
+function clickbackground(d){
+  //When users click the empty background created earlier, view reverts to the original
+  d3.selectAll(".transit-circles g circle").each(function(d){
+    d3.select(this).attr("opacity",1);
+  });
+  d3.selectAll(".country-circles circle").each(function(d){
+    d3.select(this).attr("opacity",1);
+  });
+  country = "svg"
+}
 
 function createWordCloud(countryChoice) {
     let color = d3.scale.linear()
