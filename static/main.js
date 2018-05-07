@@ -154,7 +154,7 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
         var numCircle = Math.ceil(+d.amount/circleAmount);
         var randPos = Math.random();
         for(i = 0 ; i < numCircle ; i++){
-            if((typeof destinationCentroid !== "undefined") && (typeof originCentroid !== "undefined")) {
+            if((typeof destinationCentroid !== "undefined") && (typeof originCentroid !== "undefined") && (originCentroid !== null) && (destinationCentroid !== null)) {
                 let circle = d3.select(this).append("circle").attr("class","transit");
                 //Animations
                 circle
