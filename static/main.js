@@ -7,27 +7,16 @@ let overlayWidth = 100;
 let overlayHeight = 55;
 let circleAmount = 5;   //Million
 let pathTime = 10000;   //Time to transit between locations
-let maxCircleRadius = 15;     //circle for net amounts
+let minCircleRadius = 2;
+let maxCircleRadius = 15;     //countrycircies
 let positiveColor = "blue";
 let negativeColor = "red";
+let displayPrecision = 3;   //For overlay
 let codeMap = d3.map();
 let nameMap = d3.map();
 let alphaMap = d3.map();
 let latMap = d3.map();
 let longMap = d3.map();
-
-
-
-let svg = d3.select("#map").append("svg")
-            .attr("height",height)
-            .attr("width",width)
-            .call(d3.behavior.zoom().on("zoom", function () {
-              console.log("abc")
-              svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
-            }))
-            .append("g");
-
-let selectedCountry = null;
 
 
 $(document).ready(function() {
@@ -111,6 +100,16 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
     let amountColorScale = d3.scale.linear()
       .domain([-amountRadiusScale.range()[1],amountRadiusScale.range()[1]])
       .range([0,1]);
+
+    let svg = d3.select("#map").append("svg")
+                .attr("height",height)
+                .attr("width",width)
+                .call(d3.behavior.zoom().scaleExtent([1, 5]).on("zoom", function zm() {
+                  svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
+                }))
+                .append("g");
+
+    let selectedCountry = null;
 
     //Map
     let world = topojson.feature(worldmap, {
@@ -211,6 +210,7 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
                   return d.country + " in";
                 }
               })
+              .attr("val",d.net)
               .on("click", click)
               .on("mouseover",mouseover)
               .on("mouseout",mouseout)
@@ -243,6 +243,127 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
     overlay.append("text").attr("id","country");
     overlay.append("text").attr("id","data");
 
+
+    function click(d){
+      // Clicking the country will display the world cloud and parallel coordinate
+      $( ".company-dialog" ).dialog( "close" );
+      //createWordCloud(d.country);
+      //createParCoords(d.country);
+      let selectedCountry = nameMap.get(d.country);
+      let displayString = "Startup Information of: " + selectedCountry;
+      $(".country-info").text(displayString);
+
+      //Filtering
+      d3.selectAll(".transit-circles g circle").each(function(d){
+        d3.select(this).style("display","inline");
+      });
+      //If the same country circle is clicked a second time (tracked by the "country" variable), return to top view
+      if(country != d.country){
+        country = d.country;
+        d3.selectAll(".transit-circles g:not(." + country + ") circle").each(function(d){
+          d3.select(this).style("display","none");
+        });
+        //Select all country circles and set to 0 opacity
+        d3.selectAll(".country-circles circle:not(." + country + ")").each(function(d){
+          var obj = d3.select(this).style("display","none").attr("val", function(d){
+            return d.net;
+          });
+        });
+        //Select all rellavant countries and set to 1 opacity
+        d3.selectAll(".transit-circles g." + country).each(function(d){
+          let amount = d.amount;
+          let origin = d.origin;
+          let fromOrigin = 0;
+          if(origin==country){fromOrigin = 1;}
+          //Super crude method... please help think how to improve this, maybe a more advanced not selection?
+          var otherCountry = ".country-circles circle."+d3.select(this).attr("class").replace(country,"").replace(" ","");
+          d3.selectAll(otherCountry).each(function(d){
+            var obj = d3.select(this).style("display",null)
+              .attr("r", function (d) {
+                  return amountRadiusScale(Math.abs(amount));
+              })
+              .attr("class",function(d){
+                if(fromOrigin == 0){
+                  return d.country + " out";
+                }
+                else{
+                  return d.country + " in";
+                }
+              })
+              .attr("val",function(d){
+                if(fromOrigin == 0){
+                  return amount;
+                }
+                else{
+                  return -amount;
+                }
+              });
+          });
+        });
+        d3.selectAll(".country-circles circle." + country).each(function(d){
+          d3.select(this).style("display",null)
+          .attr("r", function (d) {
+              return amountRadiusScale(Math.abs(d.net));
+          })
+          .attr("class",function(d){
+            if(d.net>=0){
+              return d.country + " out";
+            }
+            else{
+              return d.country + " in";
+            }
+          })
+          .attr("val",function(d){
+            return d.net;
+          });
+        });
+      }
+      else{
+        d3.selectAll(".country-circles circle").each(function(d){
+          d3.select(this).style("display","inline")
+          .attr("r", function (d) {
+              return amountRadiusScale(Math.abs(d.net));
+          })
+          .attr("class",function(d){
+            if(d.net>=0){
+              return d.country + " out";
+            }
+            else{
+              return d.country + " in";
+            }
+          })
+          .attr("val", function(d){
+            return d.net;
+          });
+        });
+        country = "svg"
+      }
+    }
+
+    function clickbackground(d){
+      //When users click the empty background created earlier, view reverts to the original
+      d3.selectAll(".transit-circles g circle").each(function(d){
+        d3.select(this).style("display","inline");
+      });
+      d3.selectAll(".country-circles circle").each(function(d){
+        d3.select(this).style("display","inline")
+        .attr("r", function (d) {
+            return amountRadiusScale(Math.abs(d.net));
+        })
+        .attr("class",function(d){
+          if(d.net>=0){
+            return d.country + " out";
+          }
+          else{
+            return d.country + " in";
+          }
+        })
+        .attr("val", function(d){
+          return d.net;
+        });
+      });
+      country = "svg"
+    }
 }
 
 let country = "svg";
@@ -251,71 +372,18 @@ function mouseover(d){d3.select("#overlay").style("display", null);}
 function mouseout(d){d3.select("#overlay").style("display", "none");}
 function mousemove(d){
   let overlay = d3.select("#overlay");
-    overlay.select("rect")
-        .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
-        .attr("y",d3.mouse(this)[1]-1.25*overlayHeight);
-    overlay.select("#country")
-        .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
-        .attr("y",d3.mouse(this)[1]-1.5*overlayHeight)
-        .text(nameMap.get(d.country))
-    overlay.select("#data")
-        .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
-        .attr("y",d3.mouse(this)[1]-0.5*overlayHeight)
-        .text(d.net);
-}
 
-function click(d){
-  // Clicking the country will display the world cloud and parallel coordinate
-  $( ".company-dialog" ).dialog( "close" );
-  createWordCloud(d.country);
-  createParCoords(d.country);
-  let selectedCountry = nameMap.get(d.country);
-  let displayString = "Startup Information of: " + selectedCountry;
-  $(".country-info").text(displayString);
-
-  //Filtering
-  d3.selectAll(".transit-circles g circle").each(function(d){
-    d3.select(this).style("display","inline");
-  });
-  //If the same country circle is clicked a second time (tracked by the "country" variable), return to top view
-  if(country != d.country){
-    country = d.country;
-    d3.selectAll(".transit-circles g:not(." + country + ") circle").each(function(d){
-      d3.select(this).style("display","none");
-    });
-    //Select all country circles and set to 0 opacity
-    d3.selectAll(".country-circles circle:not(." + country + ")").each(function(d){
-      var obj = d3.select(this).style("display","none");
-    });
-    //Select all rellavant countries and set to 1 opacity
-    d3.selectAll(".transit-circles g." + country).each(function(d){
-      //Super crude method... please help think how to improve this, maybe a more advanced not selection?
-      var otherCountry = ".country-circles circle."+d3.select(this).attr("class").replace(country,"").replace(" ","");
-      d3.selectAll(otherCountry).each(function(d){
-        var obj = d3.select(this).style("display","inline");
-      });
-    });
-    d3.selectAll(".country-circles circle." + country).each(function(d){
-      d3.select(this).style("display","inline");
-    });
-  }
-  else{
-    d3.selectAll(".country-circles circle").each(function(d){
-      d3.select(this).style("display","inline");
-    });
-    country = "svg"
-  }
-}
-
-function clickbackground(d){
-  //When users click the empty background created earlier, view reverts to the original
-  d3.selectAll(".transit-circles g circle").each(function(d){
-    d3.select(this).style("display","inline");
-  });
-  d3.selectAll(".country-circles circle").each(function(d){
-    d3.select(this).style("display","inline");
-  });
-  country = "svg"
+  overlay.select("rect")
+      .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+      .attr("y",d3.mouse(this)[1]-1.25*overlayHeight);
+  overlay.select("#country")
+      .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+      .attr("y",d3.mouse(this)[1]-1.5*overlayHeight)
+      .text(nameMap.get(d.country))
+  overlay.select("#data")
+      .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+      .attr("y",d3.mouse(this)[1]-0.5*overlayHeight)
+      .text(Number.parseFloat(d3.select(this).attr("val")).toPrecision(displayPrecision));
 }
 
 function createWordCloud(countryChoice) {
