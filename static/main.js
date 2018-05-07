@@ -247,8 +247,8 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
     function click(d){
       // Clicking the country will display the world cloud and parallel coordinate
       $( ".company-dialog" ).dialog( "close" );
-      //createWordCloud(d.country);
-      //createParCoords(d.country);
+      createWordCloud(d.country);
+      createParCoords(d.country);
       let selectedCountry = nameMap.get(d.country);
       let displayString = "Startup Information of: " + selectedCountry;
       $(".country-info").text(displayString);
