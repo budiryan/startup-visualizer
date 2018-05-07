@@ -12,10 +12,21 @@ let positiveColor = "blue";
 let negativeColor = "red";
 let codeMap = d3.map();
 let nameMap = d3.map();
+let alphaMap = d3.map();
+let latMap = d3.map();
+let longMap = d3.map();
+
+
 
 let svg = d3.select("#map").append("svg")
             .attr("height",height)
-            .attr("width",width);
+            .attr("width",width)
+            .call(d3.behavior.zoom().on("zoom", function () {
+              console.log("abc")
+              svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+            }))
+            .append("g");
+
 let selectedCountry = null;
 
 
@@ -41,16 +52,33 @@ $(document).ready(function() {
 function initMap(){
     d3.queue()
         .defer(d3.json, "/countrycode")
+        .defer(d3.json, "/countrycenter")
         .await(mapCountryCode);
 }
 
 
-function mapCountryCode(error, countryCode){
-    for(let i = 0; i < countryCode.length; i++)
-        codeMap.set(countryCode[i].code, countryCode[i].alpha3);
+function mapCountryCode(error, countryCode, countryCenter){
+    let tempLatMap = d3.map();
+    let tempLongMap = d3.map();
+    let tempNameMap = d3.map();
 
-    for(let i = 0; i < countryCode.length; i++)
-        nameMap.set(countryCode[i].alpha3, countryCode[i].name);
+    for(let i = 0; i < countryCode.length; i++){
+        codeMap.set(countryCode[i].code, countryCode[i].alpha3);
+        alphaMap.set(countryCode[i].alpha2, countryCode[i].alpha3);
+    }
+
+    for(let i = 0; i < countryCenter.length; i++){
+      let a3 = alphaMap.get(countryCenter[i].code);
+      tempLatMap.set(a3,countryCenter[i].lat);
+      tempLongMap.set(a3,countryCenter[i].long);
+      tempNameMap.set(a3,countryCenter[i].name);
+    }
+    for(let i = 0; i < countryCode.length; i++){
+      let code = codeMap.get(countryCode[i].code);
+      latMap.set(code,tempLatMap.get(code));
+      longMap.set(code,tempLongMap.get(code));
+      nameMap.set(code, tempNameMap.get(code));
+    }
 
     d3.queue()
       .defer(d3.json, "/worldmap")
@@ -77,9 +105,9 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
     //Convert net foreign investment into circle radius
     let amountRadiusScale = d3.scale.sqrt()
       .domain([0,d3.max(totalbycountry,function(d){return Math.abs(d.net);})])
-      .range([0,maxCircleRadius]);
-    //Convert net foreign investment into [0,1] , currently not used
+      .range([2,maxCircleRadius]);
 
+    //Convert net foreign investment into [0,1] , currently not used
     let amountColorScale = d3.scale.linear()
       .domain([-amountRadiusScale.range()[1],amountRadiusScale.range()[1]])
       .range([0,1]);
@@ -104,7 +132,7 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
         .attr("class", "borders")
         .attr("d",geoPath(topojson.mesh(worldmap, worldmap.objects.countries, function(a, b) { return a !== b; })));
 
-    //A  background for people to click on and cancels any filtering
+    //A background for people to click on and cancels any filtering
     svg.append("g").append("rect")
         .attr("height",height)
         .attr("width",width)
@@ -120,23 +148,15 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
 
     //Create line of circles for each group, ideally integrated into the enter state
     deals.each(function(d){
-        let originCentroid;
-        let destinationCentroid;
-        let origin = d3.select("#" + d.origin);
-        let destination = d3.select("#" + d.destination);
-        origin.each(function(d){
-            originCentroid = geoPath.centroid(d);
-        });
-        destination.each(function(d){
-            destinationCentroid = geoPath.centroid(d);
-        });
+        let originCentroid = getCenter(d.origin);
+        let destinationCentroid = getCenter(d.destination);
         //Rather complicated way of drawing the line of circles and distribute them evenly
         var numCircle = Math.ceil(+d.amount/circleAmount);
         var randPos = Math.random();
         for(i = 0 ; i < numCircle ; i++){
             if((typeof destinationCentroid !== "undefined") && (typeof originCentroid !== "undefined")) {
                 let circle = d3.select(this).append("circle").attr("class","transit");
-
+                //Animations
                 circle
                   .attr("cx", function (d) {
                       return originCentroid[0] + (i+randPos) * (destinationCentroid[0] - originCentroid[0]) / numCircle;
@@ -162,48 +182,87 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
                     .attr('cy', destinationCentroid[1])
                     .each("end", repeat);
                   }
-
             }
         }
     });
-      //Create net investment circle for each country based on the totalbycountry dataset passed in
-      //i.e. big circles
-      countrytotal = svg.append("g").attr("class","country-circles").selectAll("circle")
-        .data(totalbycountry)
-        .enter()
-        .append("circle");
+    //Create net investment circle for each country based on the totalbycountry dataset passed in
+    //i.e. big circles
+    countrytotal = svg.append("g").attr("class","country-circles").selectAll("circle")
+      .data(totalbycountry)
+      .enter()
+      .append("circle");
 
-        //Configure each net investment circle
-      //Note there are click, mouseover, mouseout and mousemove events built in
-      countrytotal.each(function(d){
-        let centroid;
-        let origin = d3.select("#" + d.country);
-        origin.each(function(d){centroid = geoPath.centroid(d);});
-        if(typeof centroid !== "undefined") {
-            d3.select(this)
-                .attr("cx", centroid[0])
-                .attr("cy", centroid[1])
-                .attr("r", function (d) {
-                    return amountRadiusScale(Math.abs(d.net));
-                })
-                .attr("class",function(d){
-                  if(d.net>=0){
-                    return d.country + " out";
-                  }
-                  else{
-                    return d.country + " in";
-                  }
-                })
-                .on("click", click);
+      //Configure each net investment circle
+    //Note there are click, mouseover, mouseout and mousemove events built in
+    countrytotal.each(function(d){
+      let centroid = getCenter(d.country);
+      if(centroid !== null) {
+          d3.select(this)
+              .attr("cx", centroid[0])
+              .attr("cy", centroid[1])
+              .attr("r", function (d) {
+                  return amountRadiusScale(Math.abs(d.net));
+              })
+              .attr("class",function(d){
+                if(d.net>=0){
+                  return d.country + " out";
+                }
+                else{
+                  return d.country + " in";
+                }
+              })
+              .on("click", click)
+              .on("mouseover",mouseover)
+              .on("mouseout",mouseout)
+              .on("mousemove",mousemove);
+      }
+      else{
+        console.log("Cannot render " + d.country + " as it does not exist on the countries list");
+      };
+    });
+    function getCenter(country){
+      let lat = latMap.get(country);
+      let long = longMap.get(country);
+      if(isNaN(lat)){
+        return null;
+      }
+      else{
+        return projection([long,lat]);
+      }
+    }
 
-            // .on("mouseover",mouseover)
-            // .on("mouseout",mouseout)
-            // .on("mousemove",mousemove);
-        };
-      });
+    //Overlay when mousedover, just a proof of concept
+    let overlay = svg.append("g")
+        .attr("id","overlay")
+        .style("display", "none");
+
+    overlay.append("rect")
+        .attr("height",overlayHeight)
+        .attr("width",overlayWidth);
+
+    overlay.append("text").attr("id","country");
+    overlay.append("text").attr("id","data");
+
 }
 
 let country = "svg";
+
+function mouseover(d){d3.select("#overlay").style("display", null);}
+function mouseout(d){d3.select("#overlay").style("display", "none");}
+function mousemove(d){
+  let overlay = d3.select("#overlay");
+    overlay.select("rect")
+        .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+        .attr("y",d3.mouse(this)[1]-1.25*overlayHeight);
+    overlay.select("#country")
+        .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+        .attr("y",d3.mouse(this)[1]-1.5*overlayHeight)
+        .text(nameMap.get(d.country))
+    overlay.select("#data")
+        .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+        .attr("y",d3.mouse(this)[1]-0.5*overlayHeight)
+        .text(d.net);
+}
 
 function click(d){
   // Clicking the country will display the world cloud and parallel coordinate

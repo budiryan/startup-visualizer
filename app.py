@@ -45,6 +45,10 @@ def countrycode():
     df = pd.read_csv('data/countrycode.csv')
     return df.to_json(orient='records')
 
+@app.route('/countrycenter')
+def countrycenter():
+    df = pd.read_csv('data/countrycenter.tsv',delimiter='\t',encoding='utf-8')
+    return df.to_json(orient='records')
 
 @app.route('/demoflow')
 def demoflow():

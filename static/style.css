@@ -29,18 +29,18 @@
   r:1px;
 }
 
-.overlay {
+#overlay {
   pointer-events: none !important;
 }
 
-.overlay rect{
+#overlay rect{
   fill: rgb(220,220,220);
   opacity : 0.95;
   rx: 5;
   ry: 5;
 }
 
-.overlay #country{
+#overlay #country{
   fill: black;
-  font-size: 0.5em;
+  font-size: 2em;
 }
