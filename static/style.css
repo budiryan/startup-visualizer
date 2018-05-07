@@ -16,6 +16,19 @@
   stroke-width: 1.5px;
 }
 
+.out{
+  fill: blue;
+}
+
+.in{
+  fill: red;
+}
+
+.transit{
+  fill: black;
+  r:1px;
+}
+
 .overlay {
   pointer-events: none !important;
 }
