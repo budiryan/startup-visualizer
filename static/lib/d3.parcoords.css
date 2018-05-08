@@ -1,6 +1,7 @@
 .parcoords > canvas {
   font: 14px sans-serif;
   position: absolute;
+  /* color: white; */
 }
 .parcoords > canvas {
   pointer-events: none;
@@ -28,5 +29,5 @@
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  background-color: white;
+  background-color: #232323;
 }

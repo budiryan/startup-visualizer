@@ -245,7 +245,7 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
 
 
     function click(d){
-      // Clicking the country will display the world cloud and parallel coordinate
+      // Clicking the country will display the word cloud and parallel coordinate
       $( ".company-dialog" ).dialog( "close" );
       createWordCloud(d.country);
       createParCoords(d.country);
@@ -515,7 +515,10 @@ function createParCoords(countryChoice){
                  .brushMode("1D-axes")
                  .mode("queue")
                  .interactive();
+
                parcoords.svg.selectAll("text")
-               .style("font", "10px sans-serif");
+               .style("font", "12px sans-serif")
+               .style("fill", "rgba(255,255,255, 0.7)")
+               .style("font-family", "Montserrat");
             });
 }

@@ -726,7 +726,7 @@ function flipAxisAndUpdatePCP(dimension) {
 
 function rotateLabels() {
   if (!__.rotateLabels) return;
-  
+
   var delta = d3.event.deltaY;
   delta = delta < 0 ? -5 : delta;
   delta = delta > 0 ? 5 : delta;
@@ -764,7 +764,7 @@ pc.createAxes = function() {
 
         axisElement.selectAll("path")
             .style("fill", "none")
-            .style("stroke", "#222")
+            .style("stroke", "white")
             .style("shape-rendering", "crispEdges");
 
         axisElement.selectAll("line")
@@ -791,7 +791,7 @@ pc.createAxes = function() {
       .attr("x2", w())
       .attr("y2", 1+__.nullValueSeparatorPadding.top)
       .attr("stroke-width", 1)
-      .attr("stroke", "#777")
+      .attr("stroke", "none")
       .attr("fill", "none")
       .attr("shape-rendering", "crispEdges");
   } else if (__.nullValueSeparator=="bottom") {
@@ -801,7 +801,7 @@ pc.createAxes = function() {
       .attr("x2", w())
       .attr("y2", h()+1-__.nullValueSeparatorPadding.bottom)
       .attr("stroke-width", 1)
-      .attr("stroke", "#777")
+      .attr("stroke", "none")
       .attr("fill", "none")
       .attr("shape-rendering", "crispEdges");
   }
@@ -1354,7 +1354,7 @@ pc.brushMode = function(mode) {
       .attr("stroke-width", 2);
 
     drag
-      .on("drag", function(d, i) { 
+      .on("drag", function(d, i) {
         var ev = d3.event;
         i = i + 1;
         strum["p" + i][0] = Math.min(Math.max(strum.minX + 1, ev.x), strum.maxX);

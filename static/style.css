@@ -1,6 +1,14 @@
+body {
+  background-color: #232323;
+}
+
+#header {
+  font-family: 'Montserrat';
+  color: rgba(255,255,255, 1);
+}
 .borders {
   fill: none;
-  stroke: white;
+  stroke: #232323;
   stroke-width: 1px;
   stroke-linejoin: round;
   stroke-linecap: round;
@@ -8,24 +16,30 @@
 }
 
 .countries {
-  fill: grey;
+  fill: #363636;
+}
+
+.country-info {
+  color: rgba(255,255,255, 0.9);
+  font-family: 'Montserrat';
+  font-size: 20px;
 }
 
 .country-circles{
-  stroke: black;
+  /* stroke: black; */
   stroke-width: 1px;
 }
 
 .out{
-  fill: blue;
+  fill: rgba(162,218,231,0.7);
 }
 
 .in{
-  fill: red;
+  fill: rgba(253,125,96, 0.7);
 }
 
 .transit{
-  fill: black;
+  fill: rgba(255,255,255, 0.3);
   r:1px;
 }
 
@@ -35,12 +49,13 @@
 
 #overlay rect{
   fill: rgb(220,220,220);
-  opacity : 0.95;
+  opacity : 0.8;
   rx: 5;
   ry: 5;
 }
 
 #overlay #country{
-  fill: black;
-  font-size: 2em;
+  fill: white;
+  font-size: 1em;
+  font-family: 'Montserrat';
 }
