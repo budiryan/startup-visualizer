@@ -3,7 +3,7 @@
 // Map's constant definitions
 let height = 550;
 let width = 1000;
-let overlayWidth = 100;
+let overlayWidth = 200;
 let overlayHeight = 55;
 let circleAmount = 5;   //Million
 let pathTime = 10000;   //Time to transit between locations
@@ -191,6 +191,8 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
       .enter()
       .append("circle");
 
+    console.log(totalbycountry);
+
       //Configure each net investment circle
     //Note there are click, mouseover, mouseout and mousemove events built in
     countrytotal.each(function(d){
@@ -211,6 +213,8 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
                 }
               })
               .attr("val",d.net)
+              .attr("in", 100)
+              .attr("out", 200)
               .on("click", click)
               .on("mouseover",mouseover)
               .on("mouseout",mouseout)
@@ -242,6 +246,8 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
 
     overlay.append("text").attr("id","country");
     overlay.append("text").attr("id","data");
+    overlay.append("text").attr("id", "data2");
+    overlay.append("text").attr("id", "data3");
 
 
     function click(d){
@@ -372,18 +378,29 @@ function mouseover(d){d3.select("#overlay").style("display", null);}
 function mouseout(d){d3.select("#overlay").style("display", "none");}
 function mousemove(d){
   let overlay = d3.select("#overlay");
-
   overlay.select("rect")
       .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
       .attr("y",d3.mouse(this)[1]-1.25*overlayHeight);
   overlay.select("#country")
       .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
       .attr("y",d3.mouse(this)[1]-1.5*overlayHeight)
-      .text(nameMap.get(d.country))
+      .text(nameMap.get(d.country));
+  // We have 3 rows of text (netflow, In, Out) and we need line break for each of them
+  let textOrigin = -27;
+  let textOffset = 18;
+
   overlay.select("#data")
       .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
-      .attr("y",d3.mouse(this)[1]-0.5*overlayHeight)
-      .text(Number.parseFloat(d3.select(this).attr("val")).toPrecision(displayPrecision));
+      .attr("y",d3.mouse(this)[1]-0.5*overlayHeight + textOrigin)
+      .text("Net: " + Number.parseFloat(d3.select(this).attr("val")).toPrecision(displayPrecision));
+  overlay.select("#data2")
+      .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+      .attr("y",d3.mouse(this)[1]-0.5*overlayHeight + textOrigin + textOffset)
+      .text("In: Test ");
+  overlay.select("#data3")
+      .attr("x",d3.mouse(this)[0]-0.5*overlayWidth)
+      .attr("y",d3.mouse(this)[1]-0.5*overlayHeight + textOrigin + (2 * textOffset))
+      .text("Out: Test2 ");
 }
 
 function createWordCloud(countryChoice) {
