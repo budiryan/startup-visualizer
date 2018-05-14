@@ -86,6 +86,11 @@ def get_net_investment():
     df.drop_duplicates(['check_string'], inplace=True)
     df = df.reset_index(drop=True)
 
+    # If the column substacted_net is negative, that means switch the column between investor and the startup
+    df['country_code'], df['investor_country_code'] = np.where(df['substracted_net'] < 0,
+                                                               [df['investor_country_code'], df['country_code']],
+                                                               [df['country_code'], df['investor_country_code']])
+
     return df
 
 
@@ -95,11 +100,6 @@ def getflow():
     Example: Origin: USA, Destination: IDN, Amount of investment: XXXX USD
     '''
     df = get_net_investment()
-
-    # If the column substacted_net is negative, that means switch the column between investor and the startup
-    df['country_code'], df['investor_country_code'] = np.where(df['substracted_net'] < 0,
-                                                               [df['investor_country_code'], df['country_code']],
-                                                               [df['country_code'], df['investor_country_code']])
 
     # return the result
     return_d = {'origin': df['investor_country_code'].values, 'destination': df['country_code'].values,
@@ -121,25 +121,40 @@ def gettotal():
     '''
     df = get_net_investment()
 
-    net_dict = {}
+    columns = ['country', 'in', 'out', 'net']
+    return_df = pd.DataFrame(columns=columns)
 
     for index, row in df.iterrows():
-        if row['investor_country_code'] not in net_dict:
-            net_dict[row['investor_country_code']] = 0
-        net_dict[row['investor_country_code']] += row['substracted_net']
-        if row['country_code'] not in net_dict:
-            net_dict[row['country_code']] = 0
-        net_dict[row['country_code']] -= row['substracted_net']
+        if row['country_code'] not in list(return_df['country']):
+            temp_dict = {
+                'country': row['country_code'],
+                'in': 0,
+                'out': 0,
+                'net': 0
+            }
+            return_df = return_df.append(pd.Series(temp_dict), ignore_index=True)
 
-    return_d = {'country':list(net_dict.keys()) ,'net': list(net_dict.values())}
-    return_df = pd.DataFrame(return_d)
+        if row['investor_country_code'] not in list(return_df['country']):
+            temp_dict = {
+                'country': row['investor_country_code'],
+                'in': 0,
+                'out': 0,
+                'net': 0
+            }
+            return_df = return_df.append(pd.Series(temp_dict), ignore_index=True)
 
-    # Scale down the net column, otherwise the browser will go crazy
-    # masking = (return_df['net'].values < 0).astype(np.int8)
-    # np.place(masking, masking <= 0, -1)
-    #
-    # return_df['net'] = np.log2(np.absolute(return_df['net']) / 10)
-    # return_df['net'] = return_df['net'].values * masking
+        ind_receiver = return_df[return_df['country'] == row['country_code']].index[0]
+        return_df.at[ind_receiver, 'in'] += row['substracted_net'] # In
+
+        ind_investor = return_df[return_df['country'] == row['investor_country_code']].index[0]
+        return_df.at[ind_investor, 'out'] += row['substracted_net'] # Out
+
+        # net
+        return_df.at[ind_receiver, 'net'] -= row['substracted_net']
+        return_df.at[ind_investor, 'net'] += row['substracted_net']
+
     return_df['net'] /= 1e8
+    return_df['in'] /= 1e8
+    return_df['out'] /= 1e8
 
     return return_df.to_json(orient='records')
