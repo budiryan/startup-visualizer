@@ -1,8 +1,8 @@
 //Append the svg element
 
 // Map's constant definitions
-let height = 550;
-let width = 1000;
+let height = 500;
+let width = 900;
 let overlayWidth = 100;
 let overlayHeight = 55;
 let circleAmount = 5;   //Million
@@ -256,7 +256,7 @@ function drawMap(error, worldmap, countrycode, dealflow, totalbycountry){
       createWordCloud(d.country);
       createParCoords(d.country);
       let selectedCountry = nameMap.get(d.country);
-      let displayString = "Startup Information of: " + selectedCountry;
+      let displayString = selectedCountry; //removed "Startup Information of: " +
       $(".country-info").text(displayString);
 
       //Filtering
@@ -416,8 +416,8 @@ function createWordCloud(countryChoice) {
         d3.select(".wordcloud").remove();
 
         d3.select("#wordcloud-container").append("svg")
-                .attr("width", 900)
-                .attr("height", 300)
+                .attr("width", 900) //900 HERE
+                .attr("height", 300) //300 HERE
                 .attr("class", "wordcloud")
                 .append("g")
                 // without the transform, words words would get cutoff to the left and top, they would
@@ -461,7 +461,7 @@ function createWordCloud(countryChoice) {
     // request the data
     d3.json("/word_cloud?country=" + countryChoice, function (error, categories) {
         d3.layout.cloud()
-        .size([900, 300])
+        .size([900, 300]) //900, 300 HERE
         .words(categories)
         .rotate(0)
         .fontSize(function(d) { return d.frequency; })
@@ -489,6 +489,15 @@ function createParCoords(countryChoice){
                   foreign_vs_local: (d.country_code == d.investor_country_code)?"local":"foreign"
                 }
               });
+              let parcoords = d3.parcoords()(".parcoords")
+              var range = parcoords.height() - parcoords.margin().top - parcoords.margin().bottom;
+              var min = d3.min(filtered_data, function(d) {
+                  return parseInt(d['amount_invested']);
+              });
+              var max = d3.max(filtered_data, function(d) {
+                  return parseInt(d['amount_invested']);
+              });
+              var log = d3.scale.log().domain([min, max]).range([range, 1]);
               //dimensions of each axis
               let dimensions = {"investment_type": {
                               title: 'investment type',
@@ -499,8 +508,11 @@ function createParCoords(countryChoice){
                             "amount_invested": {
                               title: 'amount invested (USD)',
                               type: 'number',
-                              index: 1
-                              // yscale: 'ordinal'
+                              index: 1,
+                              yscale: log,
+                              tickFormat: function(d){
+                                  return log.tickFormat(4,d3.format(",d"))(d);
+                              }
                             },
                             "investor_type": {
                               title: 'investor type',
@@ -520,16 +532,18 @@ function createParCoords(countryChoice){
                 .interpolate(d3.interpolateLab);
                let it = 0;
                let color = function(d){return colourIndex((it++)%12)};
-               let parcoords = d3.parcoords()(".parcoords")
+               // let parcoords = d3.parcoords()(".parcoords")
+
+               parcoords
                  .data(filtered_data)
                  .color(color)
                  .dimensions(dimensions)
-                 .bundlingStrength(1)
+                 .bundlingStrength(0.3)
                  .nullValueSeparator('bottom')
+                 .alpha(0.25)
                  .showControlPoints(true)
                  .render()
                  .createAxes()
-                 .alpha(0.5)
                  .brushMode("1D-axes")
                  .mode("queue")
                  .interactive();

@@ -5,7 +5,13 @@ body {
 #header {
   font-family: 'Montserrat';
   color: rgba(255,255,255, 1);
+  font-size: 3vh;
 }
+
+.align-center {
+   text-align:center;
+}
+
 .borders {
   fill: none;
   stroke: #232323;
