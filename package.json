@@ -1,0 +1,10 @@
+"dependencies": {
+    "bower": "1.8.4"
+},
+"scripts": {
+	"start": "node index.js",
+	"postinstall": "bower install --save"
+}
+
+
+

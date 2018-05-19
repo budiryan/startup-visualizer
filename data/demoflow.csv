@@ -1,0 +1,8 @@
+origin,destination,amount
+USA,CHN,12
+GBR,UKR,2
+AUS,UKR,3
+RUS,CHN,30
+USA,RUS,2
+AUS,RUS,3
+CHN,HKG,0.1
