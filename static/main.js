@@ -490,6 +490,8 @@ function createParCoords(countryChoice){
                 }
               });
               let parcoords = d3.parcoords()(".parcoords")
+
+              //get the log scale for amount_invested
               var range = parcoords.height() - parcoords.margin().top - parcoords.margin().bottom;
               var min = d3.min(filtered_data, function(d) {
                   return parseInt(d['amount_invested']);
@@ -498,11 +500,12 @@ function createParCoords(countryChoice){
                   return parseInt(d['amount_invested']);
               });
               var log = d3.scale.log().domain([min, max]).range([range, 1]);
+
               //dimensions of each axis
               let dimensions = {"investment_type": {
                               title: 'investment type',
                               type: 'string',
-                              index: 0
+                              index: 3
                               // yscale: 'linear'
                             },
                             "amount_invested": {
@@ -523,16 +526,15 @@ function createParCoords(countryChoice){
                           "foreign_vs_local": {
                             title: 'foreign vs local investors',
                             type: 'string',
-                            index: 3
+                            index: 0
                           }};
 
-               let colourIndex = d3.scale.linear()
-                .domain([0, 11])
-                .range(['#FDC33E', '#A6C9B1'])
-                .interpolate(d3.interpolateLab);
-               let it = 0;
-               let color = function(d){return colourIndex((it++)%12)};
-               // let parcoords = d3.parcoords()(".parcoords")
+               let color = function(d){
+                 if(d.foreign_vs_local == "local")
+                      return "rgba(162,218,231,0.7)";
+                 else
+                      return "rgba(253,125,96, 1)";
+                };
 
                parcoords
                  .data(filtered_data)
@@ -547,10 +549,32 @@ function createParCoords(countryChoice){
                  .brushMode("1D-axes")
                  .mode("queue")
                  .interactive();
-
                parcoords.svg.selectAll("text")
                .style("font", "12px sans-serif")
                .style("fill", "rgba(255,255,255, 0.7)")
                .style("font-family", "Montserrat");
+
+               // create data table, row hover highlighting
+               // var grid = d3.divgrid();
+               // d3.select("#grid")
+               //   .datum(filtered_data.slice(0,3))
+               //   .call(grid)
+               //   .selectAll(".row")
+               //   .on({
+               //     "mouseover": function(d) { parcoords.highlight([d]) },
+               //     "mouseout": parcoords.unhighlight
+               //   });
+
+               // update data table on brush event
+               // parcoords.on("brush", function(d) {
+               //   d3.select("#grid")
+               //     .datum(d.slice(0,3))
+               //     .call(grid)
+               //     .selectAll(".row")
+               //     .on({
+               //       "mouseover": function(d) { parcoords.highlight([d]) },
+               //       "mouseout": parcoords.unhighlight
+               //     });
+               // });
             });
 }
