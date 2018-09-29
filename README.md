@@ -1,6 +1,9 @@
 # Startup Visualizer
 By team Naive Baes
 
+# TLDR; Live Demo
+http://startup-visualizer.herokuapp.com/
+
 # Setup & Installation
 ## Backend
 1. `git clone` this repo
